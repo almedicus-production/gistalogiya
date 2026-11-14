@@ -869,6 +869,11 @@
           
           <div class="answer-container ${state.hideAnswers ? 'hidden-answer' : ''}">
             ${qAnswer}
+            <div class="card-edit-bar">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('question', ${item.id}, ${JSON.stringify(qTitle).replace(/"/g, '&quot;')})">
+                ✏️ Javobni to'g'rilash (Ustoz tahriri)
+              </button>
+            </div>
           </div>
         </div>
       `;
@@ -1000,6 +1005,11 @@
               <div style="line-height:1.55; color:var(--text-main); font-size:0.92rem;">
                 ${caseSolution}
               </div>
+            </div>
+            <div class="card-edit-bar">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('case', ${item.id}, ${JSON.stringify(caseTitle).replace(/"/g, '&quot;')})">
+                ✏️ Yechimni to'g'rilash (Ustoz tahriri)
+              </button>
             </div>
           </div>
         </div>
@@ -1150,12 +1160,14 @@
               <h5 style="font-size:0.88rem; color:#d97706; margin-bottom:6px;">${ICONS.gradCap} ${t('examQA')}:</h5>
               <div style="font-size:0.88rem; line-height:1.5;">${prepExamQA}</div>
             </div>
+            <div class="card-edit-bar">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('prep', ${item.id}, ${JSON.stringify(prepTitle).replace(/"/g, '&quot;')})">
+                ✏️ Preparat ma'lumotini to'g'rilash (Ustoz tahriri)
+              </button>
+            </div>
           </div>
         </div>
-      `;
-    });
-
-    html += `</div>`;
+      `;ml += `</div>`;
     contentArea.innerHTML = html;
   }
 
@@ -1273,6 +1285,11 @@
               <div class="scheme-ans-content">
                 ${sAnswer}
               </div>
+            </div>
+            <div class="card-edit-bar">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('scheme', ${item.id}, ${JSON.stringify(sTitle).replace(/"/g, '&quot;')})">
+                ✏️ Sxema tuzilmalarini to'g'rilash (Ustoz tahriri)
+              </button>
             </div>
           </div>
         </div>
