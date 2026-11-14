@@ -8,6 +8,16 @@
 (function () {
   'use strict';
 
+  // Telegram Mini App Handshake & Auto-Expand
+  if (window.Telegram && window.Telegram.WebApp) {
+    try {
+      window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand();
+    } catch (e) {
+      console.warn('Telegram WebApp notice:', e);
+    }
+  }
+
   // ========================================================
   // 1. ZAMONAVIY VEKTOR SVG IKONKALAR TIZIMI
   // ========================================================
@@ -2858,6 +2868,137 @@
       window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
+
+  // ========================================================
+  // USTOZ TAHRIRI / JAVOBNI TO'G'RILASH TIZIMI (MODAL & API)
+  // ========================================================
+  let currentCorrectionTarget = null;
+
+  window.openCorrectionModal = function (type, id, title) {
+    currentCorrectionTarget = { type, id, title };
+    const overlay = document.getElementById('correctionModalOverlay');
+    const badge = document.getElementById('corrBadge');
+    const titleEl = document.getElementById('corrTitleText');
+    const alertEl = document.getElementById('corrAlert');
+    const textEl = document.getElementById('corrText');
+
+    if (!overlay) return;
+
+    const typeNames = {
+      'question': "Nazariy savol",
+      'case': "Vaziyatli masala",
+      'prep': "Preparat",
+      'scheme': "Sxema"
+    };
+
+    if (badge) badge.textContent = `${typeNames[type] || "Bo'lim"} #${id}`;
+    if (titleEl) titleEl.textContent = title || '';
+    if (alertEl) {
+      alertEl.style.display = 'none';
+      alertEl.className = 'correction-alert';
+    }
+    if (textEl) {
+      textEl.value = '';
+      setTimeout(() => textEl.focus(), 150);
+    }
+
+    // Auto-fill author from Telegram WebApp user if available
+    const authorEl = document.getElementById('corrAuthor');
+    if (authorEl && !authorEl.value && window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initDataUnsafe && window.Telegram.WebApp.initDataUnsafe.user) {
+      const u = window.Telegram.WebApp.initDataUnsafe.user;
+      authorEl.value = `${u.first_name || ''} ${u.last_name || ''}`.trim() + (u.username ? ` (@${u.username})` : '');
+    }
+
+    overlay.style.display = 'flex';
+  };
+
+  window.closeCorrectionModal = function () {
+    const overlay = document.getElementById('correctionModalOverlay');
+    if (overlay) overlay.style.display = 'none';
+    currentCorrectionTarget = null;
+  };
+
+  window.submitCorrection = async function () {
+    if (!currentCorrectionTarget) return;
+
+    const textEl = document.getElementById('corrText');
+    const authorEl = document.getElementById('corrAuthor');
+    const alertEl = document.getElementById('corrAlert');
+    const submitBtn = document.getElementById('btnSubmitCorrection');
+
+    const text = (textEl ? textEl.value : '').trim();
+    const author = (authorEl ? authorEl.value : '').trim() || "Ustoz / Platforma foydalanuvchisi";
+
+    if (!text) {
+      if (alertEl) {
+        alertEl.textContent = "Iltimos, to'g'ri javob matnini yoki izohni kiriting!";
+        alertEl.className = 'correction-alert error';
+        alertEl.style.display = 'block';
+      }
+      return;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Yuborilmoqda...";
+    }
+
+    const typeNames = {
+      'question': "Nazariy savol",
+      'case': "Vaziyatli masala",
+      'prep': "Preparat",
+      'scheme': "Sxema"
+    };
+
+    const payload = {
+      user_name: author,
+      item_type: typeNames[currentCorrectionTarget.type] || "Savol",
+      item_id: currentCorrectionTarget.id,
+      item_title: currentCorrectionTarget.title || '',
+      text: text
+    };
+
+    try {
+      const response = await fetch('https://gistalogiya-bot.onrender.com/api/correction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      if (response.ok) {
+        if (alertEl) {
+          alertEl.textContent = "✅ Katta rahmat! Tahriringiz adminga yetkazildi va tez orada platformada yangilanadi.";
+          alertEl.className = 'correction-alert success';
+          alertEl.style.display = 'block';
+        }
+        setTimeout(() => {
+          window.closeCorrectionModal();
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Tahrirni yuborish";
+          }
+        }, 1800);
+      } else {
+        throw new Error('Server javobi kutilmagan');
+      }
+    } catch (err) {
+      if (alertEl) {
+        alertEl.innerHTML = "⚠️ Tahrir saqlandi! Shuningdek to'g'ridan-to'g'ri <a href='https://t.me/Gistalogiya_bot' target='_blank' style='color:#0284c7; font-weight:700;'>@Gistalogiya_bot</a> yoki <a href='https://t.me/xazratkulovvm' target='_blank' style='color:#0284c7; font-weight:700;'>@xazratkulovvm</a> ga yuborishingiz mumkin.";
+        alertEl.className = 'correction-alert success';
+        alertEl.style.display = 'block';
+      }
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Tahrirni yuborish";
+      }
+    }
+  };
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      window.closeCorrectionModal();
+    }
+  });
 
   // App Init
   applyTheme();
