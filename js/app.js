@@ -880,7 +880,7 @@
           <div class="answer-container ${state.hideAnswers ? 'hidden-answer' : ''}">
             ${qAnswer}
             <div class="card-edit-bar">
-              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('question', ${item.id}, ${JSON.stringify(qTitle).replace(/"/g, '&quot;')})">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('question', ${item.id})">
                 ✏️ Javobni to'g'rilash (Ustoz tahriri)
               </button>
             </div>
@@ -1017,7 +1017,7 @@
               </div>
             </div>
             <div class="card-edit-bar">
-              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('case', ${item.id}, ${JSON.stringify(caseTitle).replace(/"/g, '&quot;')})">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('case', ${item.id})">
                 ✏️ Yechimni to'g'rilash (Ustoz tahriri)
               </button>
             </div>
@@ -1171,13 +1171,16 @@
               <div style="font-size:0.88rem; line-height:1.5;">${prepExamQA}</div>
             </div>
             <div class="card-edit-bar">
-              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('prep', ${item.id}, ${JSON.stringify(prepTitle).replace(/"/g, '&quot;')})">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('prep', ${item.id})">
                 ✏️ Preparat ma'lumotini to'g'rilash (Ustoz tahriri)
               </button>
             </div>
           </div>
         </div>
-      `;ml += `</div>`;
+      `;
+    });
+
+    html += `</div>`;
     contentArea.innerHTML = html;
   }
 
@@ -1297,7 +1300,7 @@
               </div>
             </div>
             <div class="card-edit-bar">
-              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('scheme', ${item.id}, ${JSON.stringify(sTitle).replace(/"/g, '&quot;')})">
+              <button type="button" class="btn-card-edit-fix" onclick="window.openCorrectionModal('scheme', ${item.id})">
                 ✏️ Sxema tuzilmalarini to'g'rilash (Ustoz tahriri)
               </button>
             </div>
@@ -2875,7 +2878,22 @@
   let currentCorrectionTarget = null;
 
   window.openCorrectionModal = function (type, id, title) {
-    currentCorrectionTarget = { type, id, title };
+    if (!title) {
+      if (type === 'question' && window.HISTO_QUESTIONS) {
+        const it = window.HISTO_QUESTIONS.find(x => x.id === id);
+        if (it) title = it.question_uz || it.question || '';
+      } else if (type === 'case' && window.HISTO_CASES) {
+        const it = window.HISTO_CASES.find(x => x.id === id);
+        if (it) title = it.title_uz || it.title || '';
+      } else if (type === 'prep' && window.HISTO_PREPARATIONS) {
+        const it = window.HISTO_PREPARATIONS.find(x => x.id === id);
+        if (it) title = it.name || '';
+      } else if (type === 'scheme' && window.HISTO_SCHEMES) {
+        const it = window.HISTO_SCHEMES.find(x => x.id === id);
+        if (it) title = it.title_uz || it.title || '';
+      }
+    }
+    currentCorrectionTarget = { type, id, title: title || '' };
     const overlay = document.getElementById('correctionModalOverlay');
     const badge = document.getElementById('corrBadge');
     const titleEl = document.getElementById('corrTitleText');
